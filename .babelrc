@@ -1,0 +1,16 @@
+{
+    "ignore": [
+        "node_modules/**"
+        ],
+    "env": {
+        "test": {
+            "presets": ["es2015"]
+        },
+        "cjs": {
+          "presets": [["es2015", { "loose": true }]]
+        },
+        "es": {
+          "presets": [["es2015", { "loose": true, "modules": false }]]
+        }
+    }
+}

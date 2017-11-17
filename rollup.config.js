@@ -8,7 +8,7 @@ const env = process.env.NODE_ENV
 const config = {
     output: {
         format: 'umd',
-        name: 'standard-action-factory',
+        name: 'standard-action-generator',
         exports: 'named',
     },
     plugins: [

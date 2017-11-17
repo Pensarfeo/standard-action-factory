@@ -2,7 +2,8 @@ import buildActionTree, {
     StandardAction,
     DEFATUL_FUNCTIONALITIES,
     DEFATUL_STATES,
-    setDefaultFunctionalitiesAndStates } from '../src'
+    setDefaultFunctionalitiesAndStatuses,
+    makeDispatchable } from '../src'
 
 const tempStore = []
 const store = { dispatch: args => tempStore.push(args) }
@@ -170,28 +171,24 @@ const actionObj1 = {
             'locations',
             'restaurants',
         ],
-        state: 'toRequest',
+        state: 'request',
     },
     payload: {
         banana: 1,
     },
-    type: 'LOCATIONS_RESTAURANTS_CREATE_TOREQUEST',
+    type: 'LOCATIONS_RESTAURANTS_CREATE_REQUEST',
 }
 
 const actionObj2 = {
-    error: {},
     meta: {
         functionality: 'create',
         resources: [
             'locations',
             'restaurants',
         ],
-        state: 'toRequest',
+        state: 'request',
     },
-    payload: {
-        banana: 2,
-    },
-    type: 'LOCATIONS_RESTAURANTS_CREATE_TOREQUEST',
+    type: 'LOCATIONS_RESTAURANTS_CREATE_REQUEST',
 }
 
 describe('it should be able to dispatch the functions to the store directly', () => {
@@ -202,21 +199,21 @@ describe('it should be able to dispatch the functions to the store directly', ()
         expect(tempStore[ 0 ]).toEqual(actionObj1)
     })
 
-    it('and generate the righ types and metas with no error or meta given', () => {
+    it('and generate the righ types and metas with no error, meta or payload is given', () => {
         const state = DEFATUL_STATES[ 0 ]
         const functionality = DEFATUL_FUNCTIONALITIES[ 0 ]
-        actions.locations.restaurants[ functionality ][ state ].dispatch({ banana: 2 })
+        actions.locations.restaurants[ functionality ][ state ].dispatch()
         expect(tempStore[ 1 ]).toEqual(actionObj2)
     })
 })
 
-// setDefaultFunctionalitiesAndStates
+// setDefaultFunctionalitiesAndStatuses
 
 describe('for the module', () => {
     it('we should be able to set default states and functionalities', () => {
         const newDefFunct = [ 'a', 'b' ]
         const newDefState = [ 'c', 'd' ]
-        setDefaultFunctionalitiesAndStates(newDefFunct, newDefState)
+        setDefaultFunctionalitiesAndStatuses(newDefFunct, newDefState)
         const newActions = buildActionTree([ { name: 'banana' } ])
         newDefFunct.forEach((func) => {
             newDefState.forEach((state) => {
@@ -228,7 +225,7 @@ describe('for the module', () => {
     it('we should be able attach new functionalities to a previously creates', () => {
         const newDefFunct = [ 'a', 'b' ]
         const newDefState = [ 'c', 'd' ]
-        setDefaultFunctionalitiesAndStates(newDefFunct, newDefState)
+        setDefaultFunctionalitiesAndStatuses(newDefFunct, newDefState)
         const prevActions = Object.assign({}, actions)
         buildActionTree([ { name: 'banana' } ], null, actions)
         newDefFunct.forEach((func) => {
@@ -256,5 +253,45 @@ describe('StandardAction', () => {
             functionality: 'wer',
             state: '3423',
         })).toEqual('ASDF_ASDF_WER_3423')
+    })
+})
+
+describe('Make dispatchable', () => {
+    it('actions created without store should return null', () => {
+        setDefaultFunctionalitiesAndStatuses()
+        const actionsConfig = [ {
+            name: 'locations',
+            functionalities: { visit: [ 'now' ], leave: [] },
+            sub: [ {
+                name: 'restaurants',
+                sub: [
+                    { name: 'chairs' },
+                ],
+            } ],
+        } ]
+        const actionsObj = buildActionTree(actionsConfig)
+        expect(actionsObj.locations.visit.now.dispatch()).toEqual(null)
+        expect(actionsObj.locations.restaurants.chairs.load.dispatch()).toEqual(null)
+    })
+    it('actions made actionable should return the StandardAction instance itself', () => {
+        const localTempStore = []
+        const localStore = { dispatch: args => localTempStore.push(args) }
+
+        const actionsConfig = [ {
+            name: 'locations',
+            functionalities: { visit: [ 'now' ], leave: [] },
+            sub: [ {
+                name: 'restaurants',
+                sub: [
+                    { name: 'chairs' },
+                ],
+            } ],
+        } ]
+        const actionsObj = buildActionTree(actionsConfig)
+        makeDispatchable(actionsObj, localStore)
+        actionsObj.locations.visit.now.dispatch()
+        actionsObj.locations.restaurants.chairs.load.dispatch()
+
+        expect(localTempStore.length).toEqual(2)
     })
 })

@@ -1,7 +1,5 @@
 export const DEFATUL_FUNCTIONALITIES = [ 'create', 'update', 'load', 'delete' ]
-export const DEFATUL_STATES = [ 'toRequest', 'request', 'requested', 'responded', 'succeeded', 'failed' ]
-
-let store
+export const DEFATUL_STATES = [ 'request', 'requested', 'responded', 'succeeded', 'failed' ]
 
 function getTrace(resourceNode) {
     if (!resourceNode.name) return []
@@ -9,7 +7,7 @@ function getTrace(resourceNode) {
 }
 
 class StandardAction {
-    constructor(resourceNode, functionality, state = null) {
+    constructor(store, resourceNode, functionality, state = null) {
         const resources = getTrace(resourceNode)
         this.meta = { resources, functionality, state }
         this.type = StandardAction.generateType(this.meta)
@@ -29,17 +27,21 @@ class StandardAction {
     }
 
     dispatch(...args) {
+        console.log(this.__store__)
+        if (this.__store__ === null) return null
         this.__store__.dispatch(this.creator(...args))
         return this
     }
 
-    creator(payload, error = {}, meta = {}) {
+    creator(payload, error, meta = {}) {
         const newMeta = Object.assign({}, this.meta, meta)
         const { type } = this
 
         const action = {
-            type, payload, error, meta: newMeta,
+            type, meta: newMeta,
         }
+        if (error) action.error = error
+        if (payload) action.payload = payload
         return action
     }
 }
@@ -49,37 +51,36 @@ export { StandardAction }
 let buildFunctionalityTree
 let buildStateLeafs
 
-const buildFunctionalityTreefromActionCreators = (resourceNode, actionCreators = []) => {
+const buildFunctionalityTreefromActionCreators = (_store, resourceNode, actionCreators = []) => {
     Object.keys(actionCreators).forEach((name) => {
-        resourceNode.self[ name ] = new StandardAction(resourceNode, name)
+        resourceNode.self[ name ] = new StandardAction(_store, resourceNode, name)
         resourceNode.self[ name ].creator = actionCreators[ name ]
     })
 }
 
-const defineStateLeafsbuilder = _defaultStates => (resourceNode, functionality, states = _defaultStates) => {
-    const functionalityNode = new StandardAction(resourceNode, functionality)
+const defineStateLeafsbuilder = _defaultStates => (_store, resourceNode, functionality, states = _defaultStates) => {
+    const functionalityNode = new StandardAction(_store, resourceNode, functionality)
     resourceNode.self[ functionality ] = functionalityNode
-    states.map(name => functionalityNode[ name ] = new StandardAction(resourceNode, functionality, name))
+    states.map(name => functionalityNode[ name ] = new StandardAction(_store, resourceNode, functionality, name))
 }
 
 const defineFunctionalityLeafsbuilder = _defaultFunctionalities =>
-    (resourceNode, functionalities = _defaultFunctionalities, states) => {
+    (_store, resourceNode, functionalities = _defaultFunctionalities, states) => {
         if (Array.isArray(functionalities)) {
-            functionalities.forEach(name => buildStateLeafs(resourceNode, name, states))
+            functionalities.forEach(name => buildStateLeafs(_store, resourceNode, name, states))
         } else {
-            Object.keys(functionalities).map(name => buildStateLeafs(resourceNode, name, functionalities[ name ]))
+            Object.keys(functionalities).map(name => buildStateLeafs(_store, resourceNode, name, functionalities[ name ]))
         }
     }
 
-export const setDefaultFunctionalitiesAndStates = (_defaultFunctionalities = DEFATUL_FUNCTIONALITIES, _defaultStates = DEFATUL_STATES) => {
+export const setDefaultFunctionalitiesAndStatuses = (_defaultFunctionalities = DEFATUL_FUNCTIONALITIES, _defaultStates = DEFATUL_STATES) => {
     buildStateLeafs = defineStateLeafsbuilder(_defaultStates)
     buildFunctionalityTree = defineFunctionalityLeafsbuilder(_defaultFunctionalities)
 }
 
-setDefaultFunctionalitiesAndStates()
+setDefaultFunctionalitiesAndStatuses()
 
 const buildActionTree = (resourceDescriptors, _store = null, node = {}) => {
-    if (_store) store = _store
     resourceDescriptors.forEach((resource) => {
         let parentResourceNode
         const newNode = { parent: node, name: resource.name, self: {} }
@@ -89,11 +90,24 @@ const buildActionTree = (resourceDescriptors, _store = null, node = {}) => {
         } else parentResourceNode = node
 
         parentResourceNode[ resource.name ] = newNode.self
-        buildFunctionalityTreefromActionCreators(newNode, resource.actionCreators)
-        buildFunctionalityTree(newNode, resource.functionalities, resource.states)
-        if (resource.sub) buildActionTree(resource.sub, null, newNode)
+        buildFunctionalityTreefromActionCreators(_store, newNode, resource.actionCreators)
+        buildFunctionalityTree(_store, newNode, resource.functionalities, resource.states)
+        if (resource.sub) buildActionTree(resource.sub, _store, newNode)
     })
     return node
+}
+
+export const makeDispatchable = (actionTree, _store) => {
+    Object.keys(actionTree).forEach((key) => {
+        if (actionTree[ key ] instanceof StandardAction) {
+            Object.keys(actionTree[ key ]).forEach((child) => {
+                // console.log(child)
+                if (![ '__store__', 'meat', 'type' ].includes(child)) makeDispatchable(actionTree[ key ][ child ], _store)
+            })
+            actionTree[ key ].__store__ = _store
+            return makeDispatchable(actionTree[ key ], _store)
+        } else if (actionTree[ key ] instanceof Object) makeDispatchable(actionTree[ key ], _store)
+    })
 }
 
 export default buildActionTree

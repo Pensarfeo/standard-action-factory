@@ -1,5 +1,5 @@
 {
-  "name": "standard-action-factory",
+  "name": "standard-action-generator",
   "version": "1.0.0",
   "description": "generate standard and dispatchable action creators from a configuration object ",
   "author": "Pedro A. Favuzzi <pa.favuzzi@gmail.com>",
@@ -22,15 +22,15 @@
     "test:watch": "jest --coverage --watchAll",
     "build:commonjs": "cross-env BABEL_ENV=commonjs babel src --out-dir lib",
     "build:es": "cross-env BABEL_ENV=es babel src --out-dir es",
-    "build:umd:dev": "cross-env BABEL_ENV=es NODE_ENV=development rollup -c -i src/index.js -o dist/standard-action-factory.js",
-    "build:umd:prod": "cross-env BABEL_ENV=es NODE_ENV=production rollup -c -i src/index.js -o dist/standard-action-factory.min.js"
+    "build:umd:dev": "cross-env BABEL_ENV=es NODE_ENV=development rollup -c -i src/index.js -o dist/standard-action-generator.js",
+    "build:umd:prod": "cross-env BABEL_ENV=es NODE_ENV=production rollup -c -i src/index.js -o dist/standard-action-generator.min.js"
   },
   "keywords": [
     "redux",
     "standard",
     "action",
     "actionCreator",
-    "factory",
+    "generator",
     "scoped",
     "action",
     "creators"

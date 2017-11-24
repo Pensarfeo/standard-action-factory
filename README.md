@@ -240,8 +240,8 @@ Since you might want to use different defaults from the one we defined we expose
 
 ```js
 
-import {setDefaultFunctionalitiesAndStatuses} from 'standard-action-generator`
-import {store} from './store'
+import { setDefaultFunctionalitiesAndStatuses } from 'standard-action-generator'
+import { store } from './store'
 
 setDefaultFunctionalitiesAndStatuses(['f1', 'f2'], ['s1', 's2'])
 const actions = buildActionTree({ name: 'user' }, store)
@@ -266,7 +266,7 @@ If you now want to use the TYPEs you generated in your reducers you will have a 
 2. use the makeDispatchable method we provide
 
 ```js
-import {setDefaultFunctionalitiesAndStatuses, makeDispatchable} from 'standard-action-generator`
+import {setDefaultFunctionalitiesAndStatuses, makeDispatchable} from 'standard-action-generator'
 import {store} from './store'
 
 const actions = buildActionTree({ name: 'user' })

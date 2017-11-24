@@ -1,6 +1,6 @@
 {
   "name": "standard-action-generator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "generate standard and dispatchable action creators from a configuration object ",
   "author": "Pedro A. Favuzzi <pa.favuzzi@gmail.com>",
   "license": "MIT",

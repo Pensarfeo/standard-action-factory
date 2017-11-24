@@ -12,6 +12,10 @@
     "src",
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pensarfeo/standard-action-generator"
+  },
   "scripts": {
     "clean": "rimraf lib dist es",
     "build": "npm run build:commonjs && npm run build:umd:dev && npm run build:umd:prod && npm run build:es",

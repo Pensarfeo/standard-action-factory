@@ -27,7 +27,6 @@ class StandardAction {
     }
 
     dispatch(...args) {
-        console.log(this.__store__)
         if (this.__store__ === null) return null
         this.__store__.dispatch(this.creator(...args))
         return this
